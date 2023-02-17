@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-wp-ap576^@m&r6n(!zx6!$4n2867_z2ags5@uk(ph4=!pirh8=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-#ALLOWED_HOSTS = [ 'dobro.dbr.local' ]
+# ALLOWED_HOSTS = [ 'dobro.dbr.local' ]
 ALLOWED_HOSTS = [ '*' ]
 
 
@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'mainapp',
 ]
 
 MIDDLEWARE = [
@@ -104,7 +105,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru'
 
 TIME_ZONE = 'UTC'
 
