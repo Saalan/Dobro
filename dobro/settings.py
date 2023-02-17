@@ -25,7 +25,8 @@ SECRET_KEY = 'django-insecure-wp-ap576^@m&r6n(!zx6!$4n2867_z2ags5@uk(ph4=!pirh8=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [ 'dobro.dbr.local' ]
+#ALLOWED_HOSTS = [ 'dobro.dbr.local' ]
+ALLOWED_HOSTS = [ '*' ]
 
 
 # Application definition
