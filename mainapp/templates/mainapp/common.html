@@ -1,0 +1,8 @@
+{% extends 'mainapp/base.html' %}
+
+{% block page-controls %}
+	<div class="col no-mobile-flex">
+		<button id="show" type="button" class="btn btn-outline-success" onclick="getChartsData()">Show</button>
+		<button id="aggregate" type="button" class="btn btn-danger ms-2 hide" onclick="agregateCharts()">Aggregate</button>
+	</div>
+{% endblock %}
