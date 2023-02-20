@@ -77,15 +77,8 @@ WSGI_APPLICATION = 'dobro.wsgi.application'
 
 DATABASES = {
     'default': {
-#       'ENGINE': 'django.db.backends.sqlite3',
-#       'NAME': BASE_DIR / 'db.sqlite3',
-##      'ENGINE': 'django.db.backends.mysql',
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'dobro',
-        'USER' : 'dobro_dbuser',
-        'PASSWORD' : '~6331Possiblygc1',
-        'HOST' : '192.168.1.90',
-        'PORT' : '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
