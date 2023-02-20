@@ -1,0 +1,214 @@
+{% extends 'mainapp/base.html' %}
+
+
+{% block page-controls %}
+	<div class="col no-mobile-flex">
+		<button id="show" type="button" class="btn btn-outline-success" onclick="getChartsData()">Show</button>
+		<button id="aggregate" type="button" class="btn btn-danger ms-2 hide" onclick="agregateCharts()">Aggregate</button>
+	</div>
+
+{% endblock %}
+
+{% block page-controls-mobile %}
+	<div class="row justify-content-end">
+		<div id="loader-mobile" class="col loader ms-2 mt-1 w-75"></div>
+		<button id="show-mobile" type="button" class="col-3 btn btn-outline-success" onclick="getChartsData()">Show</button>
+		<button id="aggregate-mobile" type="button" class="col-4 btn btn-danger ms-2 hide" onclick="agregateCharts()">Aggregate</button>
+	</div>
+{% endblock %}	
+
+{% block content %}
+
+<div class="container-fluid mb-3">
+
+	
+{% for interface in interfaces %}
+<div class="row mt-3 justify-content-center g-3">
+	<div class="col">
+		<div class="card">
+			<div class="card-body text-center">
+				<h5 class="card-title text-center mb-0">{{ interface.description }}</h5>
+				<small class="charts-title">{{ interface.name }}</small>
+				<div class="col text-center mt-2" id='{{ interface.snmpid }}_src'>{{ interface.name }}</div>
+			</div>
+			<div class="card-footer text-muted ">Source AS</div>
+		</div>
+	</div>
+	<div class="col">
+		<div class="card">
+			<div class="card-body text-center">
+				<h5 class="card-title text-center mb-0">{{ interface.description }}</h5>
+				<small class="charts-title">{{ interface.name }}</small>
+				<div class="col text-center mt-2" id='{{ interface.snmpid }}_dst'>{{ interface.name }}</div>
+			</div>
+			<div class="card-footer text-muted">
+				<div class="row">
+					<div class="col ps-0">Destination AS</div>
+					<div class="col ps-0 text-end">{% if not aggregate %}<input id="{{ interface.snmpid }}" type="checkbox" class="aggr_checkbox">{% endif %}</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endfor %}
+
+</div>
+<script>
+if (window.innerWidth > 1820) chart_width = 720;
+else if (window.innerWidth < 1820 && window.innerWidth > 1399 ) chart_width = window.innerWidth/2.8;
+else if (window.innerWidth < 1400 && window.innerWidth > 600 ) chart_width = window.innerWidth/2.5;
+else chart_width = window.innerWidth/1.25;
+
+pieChartOptionsSource = {	tooltip: {trigger: 'none'},
+						'width': chart_width,
+						'colors' : ['#5f937d'],
+						'height': 420,
+						chartArea: { height: '200%', top: '0%', left:'10%', width: '200%'},
+						'sliceVisibilityThreshold': 0.005,
+						'legendColor' : ['222']
+						}
+
+pieChartOptionsDest = { tooltip: {trigger: 'none'},
+							'width': chart_width,
+							'colors' : ['#5f89a9'],
+							'height': 420,
+							chartArea: { height: '200%', top: '0%', left:'10%', width: '200%'},
+							'sliceVisibilityThreshold': 0.005,
+							'legendColor' : ['222']
+							}
+
+
+google.charts.load('current', {'packages':['corechart', 'sankey']});
+google.charts.setOnLoadCallback(getChartsData);
+
+
+$('.aggr_checkbox').change(function(){
+	doAggregate = false;
+	$('.aggr_checkbox').each(function(){
+		if ($(this).is(':checked'))
+			doAggregate	= true;
+	})
+	if (doAggregate) { 
+		$("#aggregate").show(200);
+		if (window.innerWidth < 1366) { 
+			$("#aggregate-mobile").show(200);
+			$("#show-mobile").hide(200);
+		}
+	}
+	else { 
+		$("#aggregate").hide(200);
+		if (window.innerWidth < 1366) { 
+			$("#show-mobile").show(200); 
+			$("#aggregate-mobile").hide(200);
+		}
+	}
+})
+
+
+
+function getChartsData() {
+	var date = new Date(dateToISO($('#date-select').val()));
+	var host = $('#host-select').val();
+	var direction = $('#direction-select').val();
+	if (window.innerWidth < 1366) { 
+		host = $('#host-select-mobile').val();
+		direction = $('#direction-select-mobile').val();
+	}
+	$.ajax({
+			  type: 'post',
+			  url: 'get_pie_chart_data',
+			  dataType: "json",
+			  data: {
+				'host' : host,
+				'date' : date.toISOString(),
+				'direction' : direction,
+				'aggregate' : {% if aggregate %} '{{ aggregate }}' {% else %} '' {% endif %}
+			  },
+			  success: function(data){		
+				  drawCharts(data);
+			  },
+			  async: true
+	})
+}
+
+function addRipeData(as) {
+	$.ajax({
+		type: "get",
+		url: "https://stat.ripe.net/data/whois/data.json",
+		data:  {'resource': as },
+				dataType: "json",
+		success: function(ripeData){
+			for(let i = 1; i < 3; i++) {
+				$('#dynamic-alert-success').append('<br>' + ripeData.data.records[0][i]['key'] + ': ' + ripeData.data.records[0][i]['value']);
+			}
+	}});
+};
+
+
+
+{% for interface in interfaces %}
+function chart{{interface.snmpid}}Source(chartsData){
+	var data = google.visualization.arrayToDataTable(chartsData['{{interface.snmpid}}']['source']);
+	var chart = new google.visualization.PieChart(document.getElementById('{{ interface.snmpid }}_src'));
+	chart.draw(data, pieChartOptionsSource);
+	google.visualization.events.addListener(chart, 'select', selectaction);
+	function selectaction(e) { 
+		if (chart.getSelection()[0]) {
+				var as = data.getValue(chart.getSelection()[0].row, 0);
+				var mbps = data.getValue(chart.getSelection()[0].row, 1);
+				var msg = 'AS' + as + ' <b>(' + mbps + ' Mbps)</b>'
+				$('#dynamic-alert-success').html(msg);
+				$('#dynamic-alert-success').show();
+				addRipeData(as);
+		}
+	}
+}
+function chart{{interface.snmpid}}Dest(chartsData){
+	var data = google.visualization.arrayToDataTable(chartsData['{{interface.snmpid}}']['destination']);
+	var chart = new google.visualization.PieChart(document.getElementById('{{ interface.snmpid }}_dst'));
+	chart.draw(data, pieChartOptionsDest);
+	google.visualization.events.addListener(chart, 'select', selectaction);
+	function selectaction(e) { 
+		if (chart.getSelection()[0]) {
+			var as = data.getValue(chart.getSelection()[0].row, 0);
+			var mbps = data.getValue(chart.getSelection()[0].row, 1);
+			var msg = 'AS' + as + ' <b>(' + mbps + ' Mbps)</b>'
+			$('#dynamic-alert-success').html(msg);
+			$('#dynamic-alert-success').show();
+			addRipeData(as);
+		}
+	}
+}
+{% endfor %}
+
+function drawCharts(chartsData) {
+	{% for interface in interfaces %}
+		if (!chartsData['{{interface.snmpid}}']['error']){ 
+			chart{{interface.snmpid}}Source(chartsData)
+			chart{{interface.snmpid}}Dest(chartsData)
+		} else {
+			toastShow("Error", chartsData['{{interface.snmpid}}']['error'], true);
+			//$('#dynamic-alert-danger').append(chartsData['{{interface.snmpid}}']['error'] + "<br>");
+			//$('#dynamic-alert-danger').show();
+		}
+	{% endfor %}
+}
+
+function getAggregateInterfaces() {
+	interfaces = "";
+	$('.aggr_checkbox').each(function(){
+		if ($(this).is(':checked'))
+			interfaces += this.id + ",";
+	})
+	return interfaces;
+}
+
+
+function agregateCharts() {
+	if (window.innerWidth < 1366) document.location.href = "?host=" + $('#host-select').val() + "&direction=" + $('#direction-select').val() + "&aggregate=" + getAggregateInterfaces();
+	else document.location.href = "?host=" + $('#host-select-mobile').val() + "&direction=" + $('#direction-select-mobile').val() + "&aggregate=" + getAggregateInterfaces();
+}
+
+</script>
+
+{% endblock %}

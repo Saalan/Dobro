@@ -1,0 +1,292 @@
+{% extends 'mainapp/settings/base_settings.html' %}
+
+
+{% block content %}
+<div class="container">
+	<div class="row mt-3 justify-content-center">
+		<div class="card col">
+			<div class="card-body text-center">
+				<h5 class="card-title text-center">Interfaces</h5>
+				<div class="row justify-content-center text-center mt-4 mb-3">
+					<div class="col-1 input-group settings-select-group">
+						<div class="input-group-prepend">
+							<label class="input-group-text" for="host-select">Host</label>
+						</div>
+						<select class="form-select" id="host-select">
+						{% for host in hosts %}
+							<option value="{{ host.host }}" {% if host == host_selected %} selected {% endif %}>{{ host.name }}</option>
+						{% endfor %}
+						</select>
+					</div>
+				</div>
+				<div class="row fixed-height-table">
+				<table class="table">
+				  <thead class="table-dark">
+					<tr>
+					  <th scope="col">#</th>
+					  <th id="" class="" scope="col">Name</th>
+					  <th id="" class="no-mobile-table" scope="col">SNMPid</span></th>
+					  <th id="" class="no-mobile-table" scope="col">Description</span></th>
+					  <th id="" class="" scope="col">Sampling</span></th>
+					  <th scope="col"></th>
+					  <th scope="col"></th>
+					</tr>
+				  </thead>
+				  <tbody id="interfaces_table">
+					{% for interface in interfaces %}
+					<tr id="{{ interface.id }}">
+						<td class=''>{{ forloop.counter }}</td>
+						<td class=''>{{ interface.name }}</td>
+						<td class='no-mobile-table'>{{ interface.snmpid }}</td>
+						<td class='no-mobile-table'>{{ interface.description }}</td>
+						<td class=''>
+								<input type="checkbox" class="sampling_checkbox" {% if interface.sampling %} checked {% endif %}>		
+						</td>
+						<td class=''><span class='edit small-icons'><span class='small-icons' data-feather="edit"></span></span></td>
+						<td class=''><span id="{{ interface.id }}" class='trash small-icons'><span class='small-icons' data-feather="trash"></span></span></td>
+					</tr>
+					{% endfor %}
+				  </tbody>
+				</table>
+				</div>
+				<div class="row mt-3">
+					<div class="col text-end">
+						<button type="button" class="btn btn btn-outline-dark " onclick="getSNMPInterfaces()"><span class="small-icons" data-feather="plus-circle"></span> Read SNMP </button>
+						<button type="button" class="btn btn btn-outline-dark " data-bs-toggle="modal" data-bs-target="#interface_add_manual_modal" ><span class="small-icons" data-feather="plus-circle"></span> Manual Add </button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+</div>
+
+<div class="modal fade" id="interface_add_manual_modal" tabindex="-1" role="dialog" aria-labelledby="interface_add_manual_modal_label" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="interface_add_manual_modal_label">Add interface</h5>
+		<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+		  <div class="input-group mb-3">
+ 				<div class="input-group-prepend">
+    			<span class="input-group-text">Name</span>
+  				</div>
+  				<input id="name" type="text" class="form-control need-validate" value="">
+		  </div>
+		  <div class="input-group mb-3">
+ 				<div class="input-group-prepend">
+    			<span class="input-group-text">SNMPid</span>
+  				</div>
+  				<input  id="snmpid" type="text" class="form-control need-validate validate-numeric" value="">
+		  </div>
+		  <div class="input-group mb-3">
+ 				<div class="input-group-prepend">
+    			<span class="input-group-text">Description</span>
+  				</div>
+  				<input  id="description" type="text" class="form-control" value="">
+		  </div>
+      </div>
+      <div class="modal-footer">
+        <button id="modal_add_edit_btn" type="button" class="btn btn-success" onclick="addInterface()">OK</button>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+      </div>
+     </div>
+  </div>
+</div>
+
+<div class="modal fade" id="interface_add_snmp_modal" tabindex="-1" role="dialog" aria-labelledby="add_snmp_modal_label" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="add_snmp_modal_label">Add interfaces</h5>
+		<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body fixed-height-table pt-0 mt-3">
+			<table class="table">
+				  <thead class="table-dark">
+					<tr>
+					  <th scope="col">#</th>
+					  <th id="" class="" scope="col">Name</th>
+					  <th id="" class="" scope="col">SNMPid</th>
+					  <th id="" class="" scope="col">Description</th>
+					  <th id="" class="" scope="col"><input id="add_all_interfaces_checkbox" type="checkbox" checked></th>
+					</tr>
+				  </thead>
+				  <tbody id="interfaces_snmp_table">
+
+				  </tbody>
+				</table>
+      </div>
+      <div class="modal-footer">
+        <button id="" type="button" class="btn btn-success" onclick="addSnmpInterfaces()">Add/Update</button>
+		<button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+      </div>
+     </div>
+  </div>
+</div>
+<script>
+
+$('#interfaces_table').on("click", '.edit', function() {
+	$('#interface_add_manual_modal_label').html('Edit interface');
+	$('#name').val(this.parentElement.parentElement.cells[1].innerHTML);
+	$('#snmpid').val(this.parentElement.parentElement.cells[2].innerHTML);
+	$('#description').val(this.parentElement.parentElement.cells[3].innerHTML);	
+	var interface_id = this.parentElement.parentElement.id;
+	$('#modal_add_edit_btn').attr('onclick', "editInterface('"+ interface_id + "')")
+	$('#interface_add_manual_modal').modal('show');
+})
+
+$('.sampling_checkbox').change(function(){
+	var interface_id = this.parentElement.parentElement.id;
+	var sampling = $(this).is(':checked');
+	editSampling(interface_id, sampling);	
+})
+
+
+function editInterface(interface_id) {
+	if (validate()) {
+		$('#interface_add_manual_modal').modal('hide');
+		$.ajax({
+				type: 'post',
+				url: '/update_interface',
+				dataType: "json",
+				data: {
+					'id' : interface_id,
+					'name' : $('#name').val(),
+					'snmpid' : $('#snmpid').val(),
+					'description' : $('#description').val(),
+				},
+				success: function(data){
+						location.reload();
+				},
+				async: true,
+		})
+	}
+}
+
+
+function editSampling(interface_id, sampling) {
+	$.ajax({
+			type: 'post',
+			url: '/update_interface_sampling',
+			dataType: "json",
+			data: {
+				'id' : interface_id,
+				'sampling' : sampling,
+			},
+			success: function(data){
+						location.reload();
+				},
+			async: true,
+	})
+}
+
+
+function addInterface() {
+	if (validate()) {
+		$('#interface_add_manual_modal').modal('hide');
+		$.ajax({
+				type: 'post',
+				url: '/add_interface',
+				dataType: "json",
+				data: {
+					'host' : $('#host-select').val(),
+					'name' : $('#name').val(),
+					'snmpid' : $('#snmpid').val(),
+					'description' : $('#description').val(),
+				},
+				success: function(data){
+						location.reload();
+				},
+				async: true,
+		})
+	}
+}
+
+
+$('.trash').click(function(){	
+	if (confirm("Are you sure to delete this interface from database?")) {
+		$.ajax({
+				type: 'post',
+				url: '/delete_interface',
+				dataType: "json",
+				data: {
+					'id' : this.id,
+				},
+				async: true,
+				success: function(data){
+						location.reload();
+				},
+		})
+	}
+})
+
+
+$('#host-select').change(function(){
+	document.location.href = "?host=" + $('#host-select').val();
+})
+
+
+function getSNMPInterfaces(){
+	$.ajax({
+			  type: 'post',
+			  url: '/get_snmp_interfaces',
+			  dataType: "json",
+			  data: {
+				'host' : $('#host-select').val(),
+			  },
+			  async: true,
+			  success: function(data) {
+			  		html_str = ''
+			  		index = 0;
+			  		data.forEach(interface => {
+			  			index ++;
+			  			html_str += '<tr class="interface_row"><td>' + index + '</td><td>' + interface.name + '</td><td>' +
+			  						 interface.index + '</td><td>' + interface.description +
+			  						 '</td><td><input type="checkbox" class="add_interface_checkbox" name="' +
+			  						 interface.index +';'+ interface.name + ';' + interface.description + '" checked></td></tr>';
+			  		});
+			  	    $('#interfaces_snmp_table').html(html_str);
+			  		$('#interface_add_snmp_modal').modal('show');
+			  },
+	})
+}
+
+
+$('#add_all_interfaces_checkbox').change(function(){
+	if ($(this).is(':checked')) { 
+	$('.add_interface_checkbox').prop('checked', true);
+	} else {
+	$('.add_interface_checkbox').prop('checked', false);
+	}
+})
+
+
+function addSnmpInterfaces(){
+	var interfaces = {};
+	$('.add_interface_checkbox').each(function(){
+		if ($(this).is(':checked')) { 
+			interface_data = $(this).attr('name').split(';');
+			interfaces[interface_data[0]] = $(this).attr('name');
+		}
+	})
+	$.ajax({
+			type: 'post',
+			url: '/add_snmp_interfaces',
+			dataType: "json",
+			data: {
+				'host' : $('#host-select').val(),
+				interfaces: interfaces,
+			},
+			async: true,
+			success: function(data){
+						location.reload();
+				},
+	})
+}
+
+
+</script>
+{% endblock %}

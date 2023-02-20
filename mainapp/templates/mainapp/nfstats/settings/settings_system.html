@@ -1,0 +1,107 @@
+{% extends 'mainapp/settings/base_settings.html' %}
+
+
+{% block content %}
+<div class="container">
+<div class="row mt-3 justify-content-center">
+		<div class="card col">
+			<div class="card-body">
+				<h5 class="card-title text-center">System Settings</h5>
+					<div class="row mt-5">
+						<div class="col">Logging Output:</div>
+						<div class="col">
+							<select class="form-select" id="log_type">
+								<option value="console" {% if  settings.log_type == 'console' %} selected {% endif %}>console</option>
+								<option value="file" {% if  settings.log_type == 'file' %} selected {% endif %}>file</option>
+							</select>
+						</div>
+					</div>
+					<div class="row mt-2">
+						<div class="col ">Log File:</div>
+						<div class="col"><input  id="log_file" type="text" class="form-control need-validate" 
+							value="{{ settings.log_file }}">
+						</div>
+					</div>
+					<div class="row mt-2">
+						<div class="col">Logging Level:</div>
+						<div class="col">
+							<select class="form-select" id="logging_level">
+								<option value="DEBUG" {% if  settings.logging_level == 'DEBUG' %} selected {% endif %}>DEBUG</option>
+								<option value="INFO" {% if  settings.logging_level == 'INFO' %} selected {% endif %}>INFO</option>
+								<option value="WARNING" {% if  settings.logging_level == 'WARNING' %} selected {% endif %}>WARNING</option>
+								<option value="ERROR" {% if  settings.logging_level == 'ERROR' %} selected {% endif %}>ERROR</option>
+								<option value="CRITICAL" {% if  settings.logging_level == 'CRITICAL' %} selected {% endif %}>CRITICAL</option>
+							</select>
+						</div>
+					</div>
+					<div class="row mt-2">
+						<div class="col">NFDUMP Tools Bin Dir:</div>
+						<div class="col"><input  id="nfdump_bin" type="text" class="form-control need-validate" 
+							value="{{ settings.nfdump_bin }}">
+						</div>
+					</div>
+					<div class="row mt-2">
+						<div class="col">SNMP Tools Bin Dir:</div>
+						<div class="col"><input  id="snmp_bin" type="text" class="form-control need-validate" 
+							value="{{ settings.snmp_bin }}">
+						</div>
+					</div>
+					<div class="row mt-2">
+						<div class="col">History (days):</div>
+						<div class="col"><input  id="history_days" type="text" class="form-control need-validate validate-numeric" 
+							value="{{ settings.history_days }}">
+						</div>
+					</div>
+					<div class="row mt-4">
+						<div class="col text-end">
+							<button type="button" class="btn btn btn-outline-success " onclick="updateSettingsVar()">Apply</button>
+						</div>
+					</div>
+			</div>
+		</div>
+</div>
+
+
+<script>
+
+function changeLoggingType() {
+	if($('#log_type').val() == 'console') $('#log_file').prop('disabled', true);
+	else $('#log_file').prop('disabled', false);
+}
+
+changeLoggingType()
+
+$('#log_type').change(function(e){ 
+	changeLoggingType()
+})
+
+function updateSettingsVar() {
+
+	if (validate()) {
+
+		$.ajax({
+				type: 'post',
+				url: '/update_settings',
+				dataType: "json",
+				data: {
+					'log_file' : $('#log_file').val(),
+					'logging_level' : $('#logging_level').val(),
+					'nfdump_bin' : $('#nfdump_bin').val(),
+					'snmp_bin' : $('#snmp_bin').val(),
+					'history_days' : $('#history_days').val(),
+					'log_type' : $('#log_type').val(),
+				},
+				success: function(data){
+					 toastShow("You've changed settings","System settings successfully changed", false);
+				},
+				async: true,
+		})
+		
+	}
+
+
+}
+
+
+</script>
+{% endblock %}

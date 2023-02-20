@@ -1,0 +1,100 @@
+{% extends 'mainapp/base.html' %}
+
+{% block page-controls %}
+<div class="col input-group text-input-group no-mobile-flex">
+	<div class="input-group-prepend">
+		<label class="input-group-text" for="interface-select">Interface:</label>
+	</div>
+	<select class="form-select" id="interface-select">
+		{% for interface in interfaces %}
+			<option value="{{ interface.snmpid }}">{{ interface.name }} ({{ interface.description }})</option>
+		{% endfor %}
+	</select>
+</div>
+<div class="col no-mobile-flex">
+	<button type="button" class="btn btn-outline-success" onclick="getChartsData()">Show</button>
+</div>
+{% endblock %}
+
+{% block page-controls-mobile %}
+	<div class="col input-group text-input-group mb-2">
+		<div class="input-group-prepend">
+			<label class="input-group-text" for="interface-select-mobile">Interface:</label>
+		</div>
+		<select class="form-select" id="interface-select-mobile">
+			{% for interface in interfaces %}
+				<option value="{{ interface.snmpid }}">{{ interface.name }} ({{ interface.description }})</option>
+			{% endfor %}
+		</select>
+	</div>
+	<div class="row justify-content-end">
+		<div id="loader-mobile" class="col loader ms-2 mt-1 w-75"></div>
+		<button type="button" class="col-3 btn btn-outline-success" onclick="getChartsData()">Show</button>
+	</div>
+{% endblock %}	
+
+
+{% block content %}
+
+<div class="container-fluid g-4">
+<div class="row mt-3 justify-content-center">
+		<div class="card p-0">
+			<div class="card-body text-center">
+				<div class="col text-center" id='chart'>Select not sampling interface and press 'Show' button</div>
+			</div>
+			<div class="card-footer text-muted text-center charts-title">{{ direction }} traffic</div>
+		</div>
+</div>
+<script>
+chartOptions = { 'height': 500 }
+google.charts.load('current', {'packages':['corechart', 'sankey']});
+
+
+function getChartsData() {
+	if (validate()) {
+		var host = $('#host-select').val();
+		var date = new Date(dateToISO($('#date-select').val()));
+		var direction = $('#direction-select').val();
+		var intrf = $('#interface-select').val();
+		if (window.innerWidth < 1366) { 
+			host = $('#host-select-mobile').val();
+			direction = $('#direction-select-mobile').val();
+			intrf = $('#interface-select-mobile').val();
+		}
+		$('.charts-title').text(direction + " traffic")
+		$.ajax({
+				type: 'post',
+				url: 'get_interface_chart_data',
+				dataType: "json",
+				data: {
+					'host' : host,
+					'date' : date.toISOString(),
+					'direction' : direction,
+					'interface' : intrf
+				},
+				success: function(data){
+					drawCharts(data);
+				},
+				async: true
+		})
+	}
+}
+
+
+function drawCharts(chartsData) {
+	var data = google.visualization.arrayToDataTable(chartsData);
+	var chart = new google.visualization.Sankey(document.getElementById('chart'));
+	var rowsCount = data.getNumberOfRows();
+	chartOptions.height = rowsCount*15;
+	if (chartOptions.height < 500) chartOptions.height = 500;
+	chart.draw(data, chartOptions);
+}
+
+
+$('#host-select').change(function(){
+	document.location.href = "?host=" + $('#host-select').val() + "&direction=" + $('#direction-select').val();
+})
+
+</script>
+
+{% endblock %}

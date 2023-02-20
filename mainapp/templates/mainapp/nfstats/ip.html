@@ -1,0 +1,296 @@
+{% extends 'mainapp/base.html' %}
+
+{% block page-controls %}
+<div class="col input-group no-mobile-flex">
+	<div class="input-group-prepend">
+		<label class="input-group-text">List</label>
+	</div>
+	<select class="form-select" id="ip-type-select">
+		<option value="ip-destination-address" {% if ip_type == 'ip-destination-address' %} selected {% endif %} >Destination IP</input>
+		<option value="ip-source-address" {% if ip_type == 'ip-source-address' %} selected {% endif %} >Source IP</input>
+	</select>
+</div>
+<div class="col input-group text-input-group no-mobile-flex">
+	<div class="input-group-prepend">
+		<label class="input-group-text" for="count-input">Count:</label>
+	</div>
+	<input type="text" class="form-control validate-numeric" id="count-input" name="count" value="15" required>
+</div>
+<div class="col no-mobile-flex">
+	<button type="button" class="btn btn-outline-success" onclick="getChartsData()">Show</button>
+</div>
+{% endblock %}
+
+{% block page-controls-mobile %}
+	<div class="col input-group mb-2">
+		<div class="input-group-prepend">
+			<label class="input-group-text">List</label>
+		</div>
+		<select class="form-select" id="ip-type-select-mobile">
+			<option value="ip-destination-address" {% if ip_type == 'ip-destination-address' %} selected {% endif %} >Destination IP</input>
+			<option value="ip-source-address" {% if ip_type == 'ip-source-address' %} selected {% endif %} >Source IP</input>
+		</select>
+	</div>
+	<div class="col input-group text-input-group mb-2">
+		<div class="input-group-prepend">
+			<label class="input-group-text">Count:</label>
+		</div>
+		<input type="text" class="form-control" id="count-input-mobile" name="count" value="15" required>
+	</div>
+	<div class="row justify-content-end">
+		<div id="loader-mobile" class="col loader ms-2 mt-1 w-75"></div>
+		<button type="button" class="col-3 btn btn-outline-success" onclick="getChartsData()">Show</button>
+	</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mb-3">
+<div class="row mt-3 justify-content-center">
+		<div class="card p-0">
+			<div class="card-body text-center ip-parameters">
+				<div class="row key-active g-3">
+					<div class="col input-group text-input-group">
+						<div class="input-group-prepend">
+							<label class="input-group-text" for="interface-sampling-select">Interface (sampling):</label>
+						</div>
+						<select class="form-select" id="interface-sampling-select">
+								<option value="">all</option>
+							{% for interface in interfaces_sampling %}
+								<option value="{{ interface.snmpid }}">{{ interface.name }} ({{ interface.description }})</option>
+							{% endfor %}
+						</select>
+					</div>
+					<div class="col input-group text-input-group">
+						<div class="input-group-prepend">
+							<label class="input-group-text" for="interface-select">Interface (not sampling):</label>
+						</div>
+						<select class="form-select" id="interface-select">
+								<option value="">all</option>
+							{% for interface in interfaces %}
+								<option value="{{ interface.snmpid }}">{{ interface.name }} ({{ interface.description }})</option>
+							{% endfor %}
+						</select>
+					</div>
+				</div>
+				<div class="row key-active g-3">
+					<div class="col input-group text-input-group">
+						<div class="input-group-prepend">
+							<label class="input-group-text" for="srcas-input">sAS:</label>
+						</div>
+						<input type="text" class="form-control validate-numeric" id="srcas-input" name="src-as" value="" placeholder="AS number" required>
+					</div>
+					<div class="col input-group text-input-group">
+						<div class="input-group-prepend">
+							<label class="input-group-text" for="dstas-input">dAS:</label>
+						</div>
+						<input type="text" class="form-control validate-numeric" id="dstas-input" name="dst-as" value="" placeholder="AS number" required>
+					</div>
+					<div class="col input-group text-input-group">
+						<div class="input-group-prepend">
+							<label class="input-group-text" for="srcport-input">sPort:</label>
+						</div>
+						<input type="text" class="form-control validate-numeric" id="srcport-input" name="sport" value="" placeholder="Port number" required>
+					</div>
+					<div class="col input-group text-input-group">
+						<div class="input-group-prepend">
+							<label class="input-group-text" for="dstport-input">dPort:</label>
+						</div>
+						<input type="text" class="form-control validate-numeric" id="dstport-input" name="dport" value="" placeholder="Port number" required>
+					</div>
+				</div>
+							
+				<h5 class="card-title text-center mb-0"></h5>
+				<div class="col text-center mt-5" id='chart'></div>
+			
+			</div>
+			<div class="card-footer text-muted text-center charts-title">{{ direction }} traffic</div>
+		</div>
+</div>
+
+<div class="modal fade" id="ip_traffic_modal" tabindex="-1" role="dialog" aria-labelledby="ip-traffic-modal-label" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="ip-traffic-modal-label">Traffic Flows</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body fixed-height-table mt-3 pt-0">
+			<table class="table">
+				  <thead class="table-dark">
+					<tr>
+					  <th scope="col">Start</th>
+					  <th scope="col">End</th>
+					  <th scope="col">sIF</th>
+					  <th scope="col">sIP</th>
+					  <th scope="col">sPort</th>
+					  <th scope="col">dIF</th>
+					  <th scope="col">dIP</th>
+					  <th scope="col">dPort</th>
+					  <th scope="col">Protocol</th>
+					  <th scope="col">Flows</th>
+					  <th scope="col">Packets</th>
+					  <th scope="col">Octets</th>
+					</tr>
+				  </thead>
+				  <tbody id="ip-traffic-modal-content" class="">
+				
+				  </tbody>
+			</table>
+      </div>
+      <div class="modal-footer">
+		<button type="button" id="ip-traffic-export-btn" class="btn btn-success">Export</button>
+		<button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+      </div>
+     </div>
+  </div>
+</div>
+
+
+<script>
+chartOptions = { tooltip: {trigger: 'none' },
+				'height': 600,
+				'fontSize': 14,
+				bar: { groupWidth: "70%" },
+				chartArea: { height: '95%', top: '0%', width: '70%'},
+				'sliceVisibilityThreshold': 0.02                
+			   };
+
+google.charts.load('current', {'packages':['corechart']});
+google.charts.setOnLoadCallback(getChartsData);
+
+function getChartsData() {
+	if (validate()) {
+	var host = $('#host-select').val();
+	var date = new Date(dateToISO($('#date-select').val()));
+	var src_as = $('#srcas-input').val();
+	var dst_as = $('#dstas-input').val();
+	var src_port = $('#srcport-input').val();
+	var dst_port = $('#dstport-input').val();
+	var direction = $('#direction-select').val();
+	var ip_type = $('#ip-type-select').val();
+	var intrf = $('#interface-select').val();
+	var intrf_smpl = $('#interface-sampling-select').val();
+	var count = $('#count-input').val();
+
+	if (window.innerWidth < 1366) { 
+		host = $('#host-select-mobile').val();
+		direction = $('#direction-select-mobile').val();
+		ip_type = $('#ip-type-select-mobile').val();
+		count = $('#count-input-mobile').val();
+	}	
+
+
+	$('.charts-title').text(direction + " traffic")
+	$.ajax({
+		  type: 'post',
+		  url: 'get_ip_chart_data',
+		  dataType: "json",
+		  data: {
+			'host' : host,
+			'date' : date.toISOString(),
+			'direction' : direction,
+			'ip_type' : ip_type,
+			'src_as' : src_as,
+			'dst_as' : dst_as,
+			'src_port':src_port,
+			'dst_port':dst_port,
+			'interface' : intrf,
+			'interface_sampling' : intrf_smpl,
+			'count': count
+		  },
+		  success: function(data){
+			  drawCharts(data);
+		  },
+		  async: true
+	})
+}
+}
+
+
+function showIpTraffic(ip){
+	var host = $('#host-select').val();
+	var date = new Date(dateToISO($('#date-select').val()));
+	var src_as = $('#srcas-input').val();
+	var dst_as = $('#dstas-input').val();
+	var src_port = $('#srcport-input').val();
+	var dst_port = $('#dstport-input').val();
+	var direction = $('#direction-select').val();
+	var ip_type = $('#ip-type-select').val();
+	var intrf = $('#interface-select').val();
+	var intrf_smpl = $('#interface-sampling-select').val();
+	$('#ip-traffic-export-btn').attr('onClick', 'downloadIpTraffic(\''+ ip +'\')' );
+	$.ajax({
+		  type: 'post',
+		  url: 'get_ip_traffic_data',
+		  dataType: "json",
+		  data: {
+			'host' : host,
+			'date' : date.toISOString(),
+			'ip_type' : ip_type,
+			'ip_addr' : ip,
+			'direction' : direction,
+			'ip_type' : ip_type,
+			'src_as' : src_as,
+			'dst_as' : dst_as,
+			'src_port':src_port,
+			'dst_port':dst_port,
+			'interface' : intrf,
+			'interface_sampling' : intrf_smpl,
+		  },
+		  async: true,
+		  success: function(data) {
+				html_str = '';
+				data.forEach(row => {
+					html_str += '<tr>';
+					row.forEach(element => html_str += '<td>' + element + '</td>');
+					html_str += '</tr>';
+				})
+				$('#ip-traffic-modal-content').html(html_str);
+				$('#ip_traffic_modal').modal('show');
+		  },
+	})
+	$('#ip_traffic_modal').modal('show');
+}
+
+
+function downloadIpTraffic(ip){
+	var date = new Date(dateToISO($('#date-select').val()));
+	window.open('download_ip_traffic_data?date=' + date.toISOString() + '&ip=' + ip, target = '_self');
+}
+
+
+function drawCharts(chartsData) {
+	var data = google.visualization.arrayToDataTable(chartsData);
+	var chart = new google.visualization.BarChart(document.getElementById('chart'));
+	var rowsCount = data.getNumberOfRows();
+	chartOptions.height = rowsCount*40;
+	chart.draw(data, chartOptions);
+	google.visualization.events.addListener(chart, 'select', selectaction);
+	function selectaction(e) {
+			if (chart.getSelection()[0]) {
+				var ip = data.getValue(chart.getSelection()[0].row, 0);
+				var mbps = data.getValue(chart.getSelection()[0].row, 1);
+				var msg = ip + ' <b>(' + mbps + ' Mbps)</b>'
+				
+				$('#dynamic-alert-success').html('<button type="button" class="btn btn-secondary btn-sm mb-2" onclick="showIpTraffic(\''+ ip +'\')">Show Traffic</button><br>');
+				$('#dynamic-alert-success').append(msg);
+				$('#dynamic-alert-success').show();
+				$.ajax({
+					type: "get",
+					url: "https://stat.ripe.net/data/whois/data.json",
+					data:  {'resource': ip },
+							dataType: "json",
+					success: function(ripeData){
+						for(let i = 0; i < 4; i++) {
+							$('#dynamic-alert-success').append('<br>' + ripeData.data.records[0][i]['key'] + ': ' + ripeData.data.records[0][i]['value']);
+						}
+					}
+				});
+			}
+	};
+}
+
+</script>
+
+{% endblock %}
