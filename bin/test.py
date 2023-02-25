@@ -1,16 +1,11 @@
 #!/usr/bin/env python3
-import re
 import subprocess
+import json
+import re
 
-cmd = "journalctl -f -u arpalert --since '2023-01-20 00:00:00'"
+cmd = "journalctl -f -o json -u arpalert --no-pager --since '2021-02-20 00:00:00'"
+#cmd = "journalctl -f -u arpalert --since '2023-01-20 00:00:00'"
 #cmd = "tail -f aaa.txt"
-
-#Feb 21 20:55:11 dbr-ubnt arpalert[913]: seq=1507410, mac=00:15:5d:01:0c:3c, ip=192.168.1.91, type=new, dev=eth0, vendor="Microsoft Corporation"
-#Feb 08 14:53:43 dbr-ubnt arpalert[438121]: seq=3263636, mac=30:85:a9:96:5b:dc, ip=192.168.1.254, reference=169.254.51.111, type=ip_change, dev=eth0, vendor="ASUSTek COMPUTER INC."
-
-
-def pars_log(line):
-    return (param)
 
 sp = subprocess.Popen(cmd,
         shell=True,
@@ -18,12 +13,58 @@ sp = subprocess.Popen(cmd,
         stderr=subprocess.PIPE)
 
 for out in iter(sp.stdout.readline,b''):
-    print(out)
-#    date=re.findall(r"\[\s*(\d+/\D+/.*?)\]", sp.stdout)
-    print(type(out))
+    data = json.loads(out.decode('utf-8'))
+#     print (type(out))
+#    date=re.findall(r"^b'(\S{3})", line)
+#    print(date,line)
+#    print(data)
+#    if data['SYSLOG_IDENTIFIER': 'arpalert']
+#    if re.match(r'^(seq=.*)', data['MESSAGE']):
+
+    print(
+       data['__REALTIME_TIMESTAMP'],
+       data['MESSAGE']
+    )
+    if re.match(r'^seq=', data['MESSAGE']):
+       msg = re.findall(r'mac=((?:[0-9a-f]{2}:|){6})', data['MESSAGE'])
+       print(msg)
+
+
+#   
+#       msg=dict()
+#      #  print(type(data['MESSAGE']))
+#       line=str(data['MESSAGE'])
+#       print(line.split(', '))
+#       cut_line=data['MESSAGE'].split(r'"')
+#       for i in cut_line:
+#          print(
+#          if ( % 2) == 0:
+#          else
+#          pair=i.split('=')
+#          print(pair[1])
+#          msg[pair[0]]=pair[1]
+#          a=i[:i.index('=')]
+#          b=i[i.index('=')+1:]
+#          msg[a]=b
+#       print (msg)
+
+#    if re.match(r'(seq=)', data['MESSAGE']):
+#       print(
+#         data['__REALTIME_TIMESTAMP'],
+#         data['MESSAGE']
+#       )
+#       msg = re.findall(r'mac=((?:[0-9a-f]{2}:){5}[0-9a-f]{2}),\sip=((?:\d{1,3}\.){3}\d{1,3}).*vendor="(?.*)"$', data['MESSAGE'])
+#       msg = re.findall(r'mac=((?:[0-9a-f]{2}(?::|)){6}', data['MESSAGE'])
 
 
 
+#    message = dict((a, b)
+#       for a, b in (pair.split('=') 
+#          for pair in data['MESSAGE'].split(',')))
+
+#    for pair in iter(data['MESSAGE'].split(','),'=')
+#	   print(type(data['MESSAGE'].split(',')))
+#	print(pair)
 
 #import re
 
