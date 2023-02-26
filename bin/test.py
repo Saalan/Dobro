@@ -2,8 +2,41 @@
 import subprocess
 import json
 import re
+import psycopg2
+from psycopg2 import Error
 
-cmd = "journalctl -f -o json -u arpalert --no-pager --since '2021-02-20 00:00:00'"
+try:
+    # Подключение к существующей базе данных
+    connection = psycopg2.connect(user="dobro_dbuser",
+                                  password="~6331dobro",
+                                  host="192.168.1.90",
+                                  port="5432",
+                                  database="dobro")
+
+    cursor = connection.cursor()
+#    print(connection.get_dsn_parameters(), "\n")
+#    cursor.execute("SELECT extract(epoch from MAX(time)) AS last_time FROM public.arpalert_log;")
+    cursor.execute("SELECT time::timestamp AS ZZZ FROM public.arpalert_log;")
+
+
+#UPDATE "public"."arpalert_log" SET "time"=to_timestamp(1653159187.197742) WHERE "id"=1;
+#SELECT extract(epoch from MAX(time)) AS time FROM public.arpalert_log; */
+#SELECT TIME::timestamp FROM public.arpalert_log; 
+
+
+    record = cursor.fetchone()
+    print(record, "\n")
+
+except (Exception, Error) as error:
+    print("Ошибка при работе с PostgreSQL", error)
+finally:
+    if connection:
+        cursor.close()
+        connection.close()
+        print("Соединение с PostgreSQL закрыто")
+
+
+cmd = "journalctl -o json -u arpalert --no-pager --since '2023-02-23 00:00:00'"
 #cmd = "journalctl -f -u arpalert --since '2023-01-20 00:00:00'"
 #cmd = "tail -f aaa.txt"
 
@@ -14,76 +47,14 @@ sp = subprocess.Popen(cmd,
 
 for out in iter(sp.stdout.readline,b''):
     data = json.loads(out.decode('utf-8'))
-#     print (type(out))
-#    date=re.findall(r"^b'(\S{3})", line)
-#    print(date,line)
-#    print(data)
-#    if data['SYSLOG_IDENTIFIER': 'arpalert']
-#    if re.match(r'^(seq=.*)', data['MESSAGE']):
-
-    print(
-       data['__REALTIME_TIMESTAMP'],
-       data['MESSAGE']
-    )
     if re.match(r'^seq=', data['MESSAGE']):
-       msg = re.findall(r'mac=((?:[0-9a-f]{2}:|){6})', data['MESSAGE'])
-       print(msg)
-
-
-#   
-#       msg=dict()
-#      #  print(type(data['MESSAGE']))
-#       line=str(data['MESSAGE'])
-#       print(line.split(', '))
-#       cut_line=data['MESSAGE'].split(r'"')
-#       for i in cut_line:
-#          print(
-#          if ( % 2) == 0:
-#          else
-#          pair=i.split('=')
-#          print(pair[1])
-#          msg[pair[0]]=pair[1]
-#          a=i[:i.index('=')]
-#          b=i[i.index('=')+1:]
-#          msg[a]=b
-#       print (msg)
-
-#    if re.match(r'(seq=)', data['MESSAGE']):
-#       print(
-#         data['__REALTIME_TIMESTAMP'],
-#         data['MESSAGE']
-#       )
-#       msg = re.findall(r'mac=((?:[0-9a-f]{2}:){5}[0-9a-f]{2}),\sip=((?:\d{1,3}\.){3}\d{1,3}).*vendor="(?.*)"$', data['MESSAGE'])
-#       msg = re.findall(r'mac=((?:[0-9a-f]{2}(?::|)){6}', data['MESSAGE'])
-
-
-
-#    message = dict((a, b)
-#       for a, b in (pair.split('=') 
-#          for pair in data['MESSAGE'].split(',')))
-
-#    for pair in iter(data['MESSAGE'].split(','),'=')
-#	   print(type(data['MESSAGE'].split(',')))
-#	print(pair)
-
-#import re
-
-#for line in stdin:
-#    print(line)
-
-
-#def reader(filename):
-#    regexp = r'ip=(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}),'
-#
-#    with open(filename) as f:
-#        log = f.read()
-#
-#        ip_list = re.findall(regexp, log)
-#    print(log)
-#    print(ip_list)
-
-
-#if __name__ == "__main__":
-#    main()
-#    reader('arpalert.log')
-#    reader('journalctl - f - u arpalert --since '2023-01-30 00:00:00'')
+       print(
+          data['__REALTIME_TIMESTAMP'],
+          data['MESSAGE']
+       )
+#       mac = re.findall(r'mac=((?:[0-9a-f]{2}:?){6})', data['MESSAGE'])
+#       ip  = re.findall(r'ip=((?:\d{1,3}\.?){4})', data['MESSAGE'])
+#       vnd = re.findall(r'vendor="(.*)?"$', data['MESSAGE'])
+#       print(mac,ip,vnd)
+       msg=re.search(r'mac=((?:[0-9a-f]{2}:?){6}), ip=((?:\d{1,3}\.?){4}),.*?vendor="(.*)"$', data['MESSAGE'])
+       print(msg[1], msg[2], msg[3])
