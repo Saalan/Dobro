@@ -6,12 +6,13 @@ def common(request):
     return render(request, "mainapp/common.html")
 
 
-def arplog(request):
-    return HttpResponse("<h4>Hello</h4>")
+def arp_log(request):
+    return render(request, "mainapp/arp-log.html")
 
 
+def dhcpd_conf(request):
+    return render(request, "mainapp/dhcpd-conf.html")
 
 
-
-#   return render(request, "mainapp/common.html")
-#   return render(request, "mainapp/index.html")
+def named_conf(request):
+    return render(request, "mainapp/named-conf.html")
