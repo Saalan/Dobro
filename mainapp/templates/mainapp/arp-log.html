@@ -1,2 +1,15 @@
 {% extends 'mainapp/base.html' %}
 {% block title %}ARP info{% endblock %}
+{% block content %}
+    {% if arp_logs %}
+        <table class="table table-bordered table-striped table-sm table-hover"
+        <tbody>
+        {% for el in arp_logs %}
+            <tr data-href="{{ el.id }}"><td>{{ el.id }}</td><td>{{ el.time }}</td><td>{{ el.mac }}</td><td>{{ el.ipv4 }}</td><td>{{ el.vendor }}</td></tr>
+        {% endfor %}
+        </tbody>
+        </table>
+    {% else %}
+        <p>&nbsp;<b>Нет Записей</b></p>
+    {%  endif %}
+{% endblock %}
