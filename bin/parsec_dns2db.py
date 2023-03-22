@@ -6,11 +6,7 @@ from psycopg2 import Error
 from time import sleep
 
 
-conn = psycopg2.connect(user="dobro_dbuser",
-                        password="~6331dobro",
-                        host="192.168.1.90",
-                        port="5432",
-                        database="dobro")
+conn = psycopg2.connect(user="dobro_dbuser",password="~6331dobro",host="192.168.1.90",port="5432",database="dobro")
 
 try:
     cursor = conn.cursor()
@@ -19,7 +15,7 @@ try:
     if count_start is None: count_start = 0
     count_start += 1								# счетчик запусков +1
     # таблица конфигурации 
-    query="SELECT id, reqest_name, match_ip_count, first_redirect_port FROM parsec_cfg WHERE active_rule=true ORDER BY id"
+    query="SELECT id, request_name, match_ip_count, first_redirect_port FROM parsec_cfg WHERE active_rule=true ORDER BY id"
     cursor.execute(query)
     for cfg in cursor.fetchall():
        #print (type(cfg[2]),cfg[2])
