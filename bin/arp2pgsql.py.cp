@@ -8,7 +8,7 @@ from psycopg2 import Error
 try:
     conn = psycopg2.connect(user="dobro_dbuser",
                           password="~6331dobro",
-                          host="172.22.0.104",
+                          host="192.168.1.90",
                           port="5432",
                           database="dobro")
 
@@ -29,7 +29,7 @@ try:
           data_log = data['__REALTIME_TIMESTAMP'][:10]+'.'+data['__REALTIME_TIMESTAMP'][10:]
           msg=re.search(r'mac=((?:[0-9a-f]{2}:?){6}), ip=((?:\d{1,3}\.?){4}),.*?vendor="(.*)"$', data['MESSAGE'])
           # print(data_log, msg[1], msg[2], msg[3])
-          cursor.execute("INSERT INTO public.arpalert_log (time,mac,ipv4,vendor) VALUES (TO_TIMESTAMP(%s),%s,%s,%s)",
+          cursor.execute("INSERT INTO public.arpalert_log (time,mac,ipv4,vendor) VALUES (TO_TIMESTAMP(%s)+INTERVAL '3 HOURS',%s,%s,%s)",
           (data['__REALTIME_TIMESTAMP'][:10]+'.'+data['__REALTIME_TIMESTAMP'][10:], msg[1], msg[2], msg[3]))
           conn.commit()
 

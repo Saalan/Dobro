@@ -7,4 +7,5 @@ urlpatterns = [
     path('arp-log', views.arp_log, name="arp-log"),
     path('dhcpd-conf', views.dhcpd_conf, name="dhcpd-conf"),
     path('named-conf', views.named_conf, name="named-conf"),
+    path('parsec-db', views.parsec_db, name="parsec-db"),
 ]

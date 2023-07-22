@@ -11,6 +11,7 @@
 	<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" >
 	<link rel="stylesheet" href="{% static 'css/styles.css' %}" >
 	<link rel="stylesheet" href="{% static 'css/datepicker.min.css' %}" >
+    {% block js_stuff %}{% endblock %}
     <title>{% block title %}{% endblock %}</title>
 </head>
 <body>
@@ -37,6 +38,8 @@
                         <span class="menu-icons" data-feather="pie-chart"></span>dhcpd.conf</a></li>
                     <li><a class="nav-link {% if request.resolver_match.url_name == 'named-conf' %}active-white{% endif %}" href="{% url 'named-conf' %}">
                         <span class="menu-icons" data-feather="pie-chart"></span>named.conf</a></li>
+                    <li><a class="nav-link {% if request.resolver_match.url_name == 'parsec-db' %}active-white{% endif %}" href="{% url 'parsec-db' %}">
+                        <span class="menu-icons" data-feather="pie-chart"></span>PARSEC-DB</a></li>
                 </ul>
 				{% endblock %}
 				<div class="bottom">

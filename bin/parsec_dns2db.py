@@ -6,7 +6,7 @@ from psycopg2 import Error
 from time import sleep
 
 
-conn = psycopg2.connect(user="dobro_dbuser",password="~6331dobro",host="192.168.1.90",port="5432",database="dobro")
+conn = psycopg2.connect(user="dobro_dbuser",password="~6331dobro",host="172.22.0.104",port="5432",database="dobro")
 
 try:
     cursor = conn.cursor()

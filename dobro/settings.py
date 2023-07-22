@@ -81,7 +81,7 @@ DATABASES = {
         'NAME': 'dobro',
         'USER' : 'dobro_dbuser',
         'PASSWORD' : '~6331dobro',
-        'HOST' : '192.168.1.90',
+        'HOST' : '172.22.0.104',
         'PORT' : '5432',
     }
 }
@@ -110,7 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'ru'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 

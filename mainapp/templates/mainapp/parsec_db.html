@@ -1,0 +1,49 @@
+{% extends 'mainapp/base.html' %}
+{% block title %}ARP info{% endblock %}
+{% block content %}
+    {% if parsec_db %}
+        <table class="table table-bordered table-striped table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>Group</th>
+                    <th>Имя Хоста (ответ DNS)</th>
+                    <th>ip</th>
+                    <th>на Порт</th>
+                    <th>Date/Time</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for el in parsec_db %}
+                <tr>
+                    <td>{{ el.id }}</td>
+                    <td>{{ el.id_count_start }}</td>
+                    <td>{{ el.responce_name }}</td>
+                    <td>{{ el.ipv4 }}</td>
+                    <td>{{ el.redirect_port }}</td>
+                    <td>{{ el.rec_time }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>&nbsp;<b>Нет Записей</b></p>
+    {%  endif %}
+{% endblock %}
+
+{% block js_stuff %}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#arp_list').dataTable(
+                {
+                    "order": [[ 1, "asc"]],
+                    "pageLength": 10,
+                }
+            );
+        });
+    </script>
+
+
+{% endblock js_stuff %}

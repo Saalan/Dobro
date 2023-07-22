@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from .models import arpalert_log
+from .models import parsec_dns
+
 
 def common(request):
     return render(request, "mainapp/common.html")
@@ -16,3 +18,8 @@ def dhcpd_conf(request):
 
 def named_conf(request):
     return render(request, "mainapp/named-conf.html")
+
+
+def parsec_db(request):
+    parsec_db = parsec_dns.objects.order_by('-id')
+    return render(request, "mainapp/parsec-db.html", { 'parsec_db': parsec_db})
